@@ -1,6 +1,11 @@
+#此部分为遗传算法得出的最优角度
+
+
 import math
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
+from deap import base, creator, tools, algorithms
 
 
 matplotlib.rcParams['font.family'] = 'SimHei'  # 黑体
@@ -66,6 +71,56 @@ body_parts = calculate_s(1.8, 80)
 s1 = body_parts["torso_proj_area"]
 s2 = body_parts["thigh_proj_area"]
 s3 = body_parts["calf_proj_area"]
+
+
+def get_v_exit(angles):
+    angle1, angle2, angle3 = angles
+    A = calculate_A(s1, s2, s3, angle1, angle2, angle3)
+    def dvds(s, v):
+        Fg = g * math.sin(theta)
+        Ff = mu * g * math.cos(theta)
+        Fd = 0.5 / m * rho * Cd * A * v ** 2
+        return (Fg - Ff - Fd) / v if v != 0 else float('inf')
+    s = 0
+    v = 1
+    while s < s_max:
+        k1 = dvds(s, v)
+        k2 = dvds(s + ds / 2, v + ds * k1 / 2)
+        k3 = dvds(s + ds / 2, v + ds * k2 / 2)
+        k4 = dvds(s + ds, v + ds * k3)
+        v += ds * (k1 + 2 * k2 + 2 * k3 + k4) / 6
+        s += ds
+    return v
+
+# deap遗传算法部分
+creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+creator.create("Individual", list, fitness=creator.FitnessMax)
+toolbox = base.Toolbox()
+toolbox.register("attr_angle1", np.random.uniform, 0, 90)
+toolbox.register("attr_angle2", np.random.uniform, 0, 90)
+toolbox.register("attr_angle3", np.random.uniform, 0, 90)
+toolbox.register("individual", tools.initCycle, creator.Individual,
+                 (toolbox.attr_angle1, toolbox.attr_angle2, toolbox.attr_angle3), n=1)
+toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+def eval_func(individual):
+    angle1, angle2, angle3 = individual
+    if not (0 <= angle1 <= 90 and 0 <= angle3 <= 90 and 0 <= angle2 <= 180):
+        return -1e6,
+    v_exit = get_v_exit([angle1, angle2, angle3])
+    return v_exit,
+
+toolbox.register("evaluate", eval_func)
+toolbox.register("mate", tools.cxBlend, alpha=0.5)
+toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=10, indpb=0.5)
+toolbox.register("select", tools.selTournament, tournsize=3)
+
+pop = toolbox.population(n=20)
+hof = tools.HallOfFame(1)
+algorithms.eaSimple(pop, toolbox, cxpb=0.5, mutpb=0.2, ngen=30, halloffame=hof, verbose=False)
+best = hof[0]
+angle1, angle2, angle3 = best
+print(f"最优角度: angle1={angle1:.2f}°, angle2={angle2:.2f}°, angle3={angle3:.2f}°")
 
 
 angle1 = 30  # 身体与大腿夹角
