@@ -50,22 +50,14 @@ def calculate_A(s1, s2, s3, angle1, angle2, angle3):
     return A
 
 
-
-
-
-
-
-
-
-
 # === 滑行模型参数 ===
 g = 9.81  # 重力加速度
-theta = math.radians(15)  # 坡度角
-mu = 0.1  # 滑雪摩擦系数
+theta = math.radians(35)  # 坡度角
+mu = 0.01  # 滑雪摩擦系数
 rho = 1.225  # 空气密度
 m = 70  # 人体质量 kg
 s_max = 90  # 总滑行长度
-ds = 1  # 每一步的滑行距离
+ds = 0.01  # 每一步的滑行距离
 Cd = 0.7
 
 
@@ -76,9 +68,9 @@ s2 = body_parts["thigh_proj_area"]
 s3 = body_parts["calf_proj_area"]
 
 
-angle1 = 0  # 身体与大腿夹角
-angle2 = 0  # 大腿与小腿夹角
-angle3 = 0  # 手臂状态 (可选变量，如是否张开)
+angle1 = 30  # 身体与大腿夹角
+angle2 = 30  # 大腿与小腿夹角
+angle3 = 30  # 手臂状态 (可选变量，如是否张开)
 
 A = calculate_A(s1,s2,s3,angle1,angle2,angle3)
 print(s1)
@@ -98,7 +90,7 @@ def dvds(s, v):
 
 # 初始条件
 s = 0
-v = 0.01  # 初始速度（不能为0）
+v = 1  # 初始速度（不能为0）
 
 velocities = []
 positions = []
