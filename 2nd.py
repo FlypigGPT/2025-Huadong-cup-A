@@ -2,6 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from deap import base, creator, tools, algorithms
+import matplotlib
+
+
+matplotlib.rcParams['font.family'] = 'SimHei'  # 黑体
+matplotlib.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 # =====================
 # 1. 物理与赛道参数
@@ -11,7 +16,7 @@ y0 = 3   # 起跳点高度 (m)
 mass = 70  # 质量 (kg)
 rho = 1.225  # 空气密度 (kg/m³)
 g = 9.81  # 重力加速度 (m/s²)
-CD0 = 0.5
+CD0 = 0.7
 CL_max = 0.7
 A0 = 1
 k1 = 0.8
@@ -176,12 +181,12 @@ x_vals, y_vals = sol.y[0], sol.y[1]
 x_hill = np.linspace(0, max(x_vals)+10, 300)
 y_hill = hill_profile(x_hill)
 plt.figure(figsize=(10, 5))
-plt.plot(x_vals, y_vals, label="Flight Path")
-plt.plot(x_hill, y_hill, 'k--', label="Hill (34°)")
-plt.plot(best_result["x"], best_result["y"], 'ro', label="Landing Point")
-plt.title("Ski Jump Optimal Trajectory (Genetic Algorithm)")
-plt.xlabel("Horizontal Distance (m)")
-plt.ylabel("Height (m)")
+plt.plot(x_vals, y_vals, label="飞行轨迹")
+plt.plot(x_hill, y_hill, 'k--', label="赛道（34°坡）")
+plt.plot(best_result["x"], best_result["y"], 'ro', label="落地点")
+plt.title("跳台滑雪最优轨迹（遗传算法）")
+plt.xlabel("水平距离 (米)")
+plt.ylabel("高度 (米)")
 plt.legend()
 plt.grid(True)
 plt.axis("equal")
