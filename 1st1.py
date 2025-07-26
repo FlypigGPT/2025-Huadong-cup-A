@@ -36,9 +36,9 @@ def calculate_A(s1, s2, s3, angle1, angle2, angle3):
     rad_angle2 = math.radians(angle2)
     rad_angle3 = math.radians(angle3)
     A = (
-        s1 * math.sin(rad_angle1) +
-        s2 * math.sin(rad_angle2 - rad_angle1) +
-        s3 * math.sin(rad_angle3 - rad_angle2 + rad_angle1)
+            s1 * math.sin(rad_angle1) +
+            s2 * math.sin(rad_angle2 - rad_angle1) +
+            s3 * math.sin(rad_angle3 - rad_angle2 + rad_angle1)
     )
     return A
 
