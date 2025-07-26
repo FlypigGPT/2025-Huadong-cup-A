@@ -9,10 +9,19 @@ matplotlib.rcParams['font.family'] = 'SimHei'  # 黑体
 matplotlib.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 def calculate_s(height, weight):
-    BSA = 0.007184 * (height * 100) ** 0.725 * (weight) ** 0.425
+    # 全身表面积估算（Du Bois公式）
+    BSA = 0.007184 * (height * 100) ** 0.725 * (weight) ** 0.425  # m²
+
+    # 比例估算每个部位所占体表面积（文献参考估计值）
+    # 头+躯干约占 55%
+    # 大腿约占 21%
+    # 小腿约占 14%
+
     torso_area = BSA * 0.55
     thigh_area = BSA * 0.21
     calf_area = BSA * 0.14
+
+    # 正面投影约为体表面积的一半（粗略估算）
     torso_proj = torso_area * 0.5
     thigh_proj = thigh_area * 0.5
     calf_proj = calf_area * 0.5
@@ -34,7 +43,7 @@ def calculate_A(s1, s2, s3, angle1, angle2, angle3):
     return A
 
 g = 9.81
-theta = math.radians(26)
+theta = math.radians(35)
 mu = 0.01
 rho = 1.225
 m = 70
