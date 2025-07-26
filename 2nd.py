@@ -1,68 +1,69 @@
 import numpy as np
+from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
-import matplotlib
 
-matplotlib.rcParams['font.family'] = 'SimHei'  # 黑体
-matplotlib.rcParams['axes.unicode_minus'] = False  # 正常显示负号
+# 参数定义
+m = 70  # 质量，kg
+rho = 1.225  # 空气密度，kg/m^3
+g = 9.81  # 重力加速度，m/s^2
+A0 = 0.5  # 身体迎风面积基准值，m^2
+theta_landing = -35 * np.pi / 180  # 着陆坡倾角
 
-# -----------------------
-# 飞行参数
-# -----------------------
-g = 9.81  # 重力加速度 (m/s^2)
-v0 = 26  # 起跳初速度 (m/s)
-theta0 = np.radians(11)  # 起跳角度 (°→rad)
-T = 2.8  # 模拟时长 (s)
-t = np.linspace(0, T, 300)  # 时间点
+# 滑板迎角和身体俯仰角
+alpha_s = 10 * np.pi / 180  # 滑板迎角
+alpha_b = 20 * np.pi / 180  # 身体俯仰角
 
-# 姿态角模拟（alpha: 身体倾角；phi: 滑板开口角）
-alpha_0 = np.radians(6.5)
-k_alpha = np.radians(0.5)
-alpha_t = alpha_0 + k_alpha * t
+# 动力学函数中的Cd和Cl可以根据角度变化简单设定
+def Cd(alpha_s, alpha_b):
+    return 0.5 + 0.3 * np.abs(np.sin(alpha_b)) + 0.2 * np.abs(np.sin(alpha_s))
 
-# -----------------------
-# 位移计算
-# -----------------------
-x = v0 * np.cos(theta0) * t
-y = v0 * np.sin(theta0) * t - 0.5 * g * t**2
+def Cl(alpha_s):
+    return 0.6 * np.sin(2 * alpha_s)
 
-# 找到落地位置
-landing_index = np.where(y >= 0)[0][-1]
-landing_x = x[landing_index]
-landing_y = y[landing_index]
-landing_angle = np.degrees(np.arctan2(
-    v0 * np.sin(theta0) - g * t[landing_index],
-    v0 * np.cos(theta0)
-))
+def A(alpha_b):
+    return A0 * (1 + 0.3 * np.abs(np.sin(alpha_b)))
 
-# -----------------------
-# 绘图
-# -----------------------
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.plot(x, y, color='royalblue', linewidth=2.5, label="飞行轨迹")
+# 微分方程
+def dynamics(t, state):
+    vx, vy, x, y = state
+    v = np.sqrt(vx**2 + vy**2)
+    drag = 0.5 * rho * v * Cd(alpha_s, alpha_b) * A(alpha_b) / m
+    lift = 0.5 * rho * v * Cl(alpha_s) * A(alpha_b) / m
+    dvx_dt = -drag * vx / v + lift * vy / v
+    dvy_dt = -g - drag * vy / v - lift * vx / v
+    return [dvx_dt, dvy_dt, vx, vy]
 
-# 姿态箭头（每隔一定时间）
-for i in range(0, len(t), 40):
-    dx = 2.0 * np.cos(alpha_t[i])
-    dy = 2.0 * np.sin(alpha_t[i])
-    ax.arrow(x[i], y[i], dx, dy,
-             head_width=0.4, head_length=0.6,
-             fc='darkorange', ec='darkorange', alpha=0.7)
+# 初始条件
+vx0 = 28 * np.cos(0)  # 初始速度，取平行方向
+vy0 = 28 * np.sin(0)
+x0, y0 = 0, 3  # 假设起跳点在 y=3 米高处
+state0 = [vx0, vy0, x0, y0]
 
-# 落地标记
-ax.plot(landing_x, landing_y, 'ro', label="落地点")
-ax.annotate(f"落地角度 {landing_angle:.1f}°",
-            xy=(landing_x, landing_y),
-            xytext=(landing_x - 12, landing_y + 5),
-            arrowprops=dict(facecolor='red', arrowstyle='->'),
-            fontsize=12, color='darkred')
+# 定义终止条件（碰到落地斜坡）
+def hit_ground(t, y):
+    # y = tan(theta_landing) * x 是地面的线性方程
+    return y[3] - np.tan(theta_landing) * y[2]
 
-# 图像美化
-ax.set_title("跳台滑雪：飞行轨迹与姿态变化", fontsize=16)
-ax.set_xlabel("水平距离 x (m)", fontsize=13)
-ax.set_ylabel("垂直高度 y (m)", fontsize=13)
-ax.grid(True, linestyle='--', alpha=0.5)
-ax.legend(fontsize=12)
-ax.set_xlim(0, x[-1] + 5)
-ax.set_ylim(0, np.max(y) + 10)
-plt.tight_layout()
+hit_ground.terminal = True
+hit_ground.direction = -1
+
+# 求解
+sol = solve_ivp(dynamics, [0, 10], state0, t_eval=np.linspace(0, 5, 500), events=hit_ground)
+
+# 提取数据
+x = sol.y[2]
+y = sol.y[3]
+
+# 作图
+plt.figure(figsize=(10, 5))
+plt.plot(x, y, label='Trajectory')
+x_landing = np.linspace(0, 140, 500)
+y_landing = np.tan(theta_landing) * x_landing
+plt.plot(x_landing, y_landing, '--', label='Landing slope', color='gray')
+plt.xlabel('Horizontal distance (m)')
+plt.ylabel('Vertical height (m)')
+plt.title('Flight Trajectory with Lift and Drag')
+plt.legend()
+plt.grid(True)
+plt.axis('equal')
 plt.show()

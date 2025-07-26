@@ -34,7 +34,7 @@ def calculate_A(s1, s2, s3, angle1, angle2, angle3):
     return A
 
 g = 9.81
-theta = math.radians(35)
+theta = math.radians(26)
 mu = 0.01
 rho = 1.225
 m = 70

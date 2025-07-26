@@ -53,7 +53,7 @@ def calculate_A(s1, s2, s3, angle1, angle2, angle3):
 
 # === 滑行模型参数 ===
 g = 9.81  # 重力加速度
-theta = math.radians(35)  # 坡度角
+theta = math.radians(26)  # 坡度角
 mu = 0.01  # 滑雪摩擦系数
 rho = 1.225  # 空气密度
 m = 70  # 人体质量 kg
